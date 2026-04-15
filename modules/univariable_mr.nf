@@ -3,10 +3,6 @@
 //  Univariable MR: IVW + MR-Egger + Weighted Median
 //  per causal pair × direction
 //
-//  Fix (2026-04-13): PLINK2 writes .clumps (not .clumped).
-//  ld_clump() from TwoSampleMR hardcodes .clumped, so we bypass
-//  it entirely and call PLINK directly via system2(), then read
-//  the output ourselves — works for both PLINK 1.9 and PLINK2.
 // ================================================================
 process UNIVARIABLE_MR {
     label 'medium'
