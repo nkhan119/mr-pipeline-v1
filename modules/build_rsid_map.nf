@@ -1,6 +1,5 @@
 // ================================================================
 //  modules/build_rsid_map.nf — Stage B1
-//  Build compressed CHR:BP → rsID lookup table from 1000G bim file
 // ================================================================
 process BUILD_RSID_MAP {
     label 'small'
