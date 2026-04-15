@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MR Pipeline · CDC 1.0.0 · __AUTHOR__</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.2/plotly.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&family=Source+Code+Pro:wght@400;500&display=swap');
+:root{
+  --blue-900:#1a2c5b;--blue-700:#1e4db7;--blue-500:#2d7dd2;--blue-300:#74b4e8;--blue-100:#dbeafe;--blue-50:#f0f7ff;
+  --ink:#1a2c5b;--ink2:#2d4175;--ink3:#5a7299;--ink4:#8faabf;
+  --bg:#ffffff;--bg2:#ffffff;--bg3:#f0f7ff;
+  --border:#c5d8ee;--border2:#deeaf8;
+  --red:#c0392b;--green:#1a7f37;--amber:#9a6700;--purple:#6d28d9;
+  --r:6px;--r2:12px;
+  --shadow:0 2px 12px rgba(29,78,183,.12),0 8px 28px rgba(29,78,183,.08);
+  --shadow-sm:0 1px 4px rgba(29,78,183,.09);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Source Sans 3',sans-serif;font-size:15px;color:var(--ink2);background:var(--bg);min-height:100vh;line-height:1.6}
+
+/* ── Header ── */
+.hdr{background:linear-gradient(135deg,var(--blue-900) 0%,var(--blue-700) 55%,var(--blue-500) 100%);color:#fff;position:relative;overflow:hidden}
+.hdr-inner{max-width:1440px;margin:0 auto;padding:56px 72px 48px;position:relative;z-index:2}
+.hdr-grid{display:grid;grid-template-columns:1fr auto;gap:48px;align-items:end}
+.hdr-eyebrow{font-family:'Source Code Pro',monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:14px}
+.hdr-title{font-family:'Source Serif 4',serif;font-size:42px;font-weight:700;line-height:1.15;color:#fff}
+.hdr-title span{color:#93c5fd}
+.hdr-sub{font-size:15px;color:rgba(255,255,255,.68);margin-top:12px;font-weight:400;line-height:1.75}
+.hdr-right{text-align:right}
+.hdr-author{font-family:'Source Serif 4',serif;font-size:22px;font-weight:700;color:#fff;line-height:1.3}
+.hdr-affil{font-size:13px;color:rgba(255,255,255,.7);margin-top:5px;font-family:'Source Code Pro',monospace;line-height:1.65}
+.hdr-date{font-size:11px;color:rgba(255,255,255,.42);margin-top:10px;font-family:'Source Code Pro',monospace}
+.hdr-bar{height:4px;background:linear-gradient(90deg,#93c5fd 0%,#60a5fa 40%,#3b82f6 75%,transparent 100%);margin-top:38px}
+
+/* ── Navigation ── */
+.nav{background:#fff;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:200;box-shadow:0 2px 10px rgba(29,78,183,.09)}
+.nav-inner{max-width:1440px;margin:0 auto;padding:0 72px;display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
+.nav-inner::-webkit-scrollbar{display:none}
+.nav-tab{padding:16px 24px;font-size:15px;font-weight:500;color:var(--ink3);cursor:pointer;border-bottom:3px solid transparent;transition:all .13s;white-space:nowrap}
+.nav-tab:hover{color:var(--blue-700);background:var(--blue-50)}
+.nav-tab.active{color:var(--blue-700);border-bottom-color:var(--blue-700);font-weight:700}
+
+/* ── Layout ── */
+.main{max-width:1440px;margin:0 auto;padding:44px 72px 110px}
+.section{display:none}.section.active{display:block}
+
+/* ── Section header ── */
+.sec-hdr{margin-bottom:36px;padding-bottom:20px;border-bottom:2px solid var(--border2)}
+.sec-eyebrow{font-family:'Source Code Pro',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue-500);margin-bottom:8px;font-weight:600}
+.sec-title{font-family:'Source Serif 4',serif;font-size:28px;font-weight:700;color:var(--blue-700)}
+.sec-desc{font-size:15px;color:var(--ink3);margin-top:7px;line-height:1.65}
+
+/* ── Stat cards ── */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px;margin-bottom:38px}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r2);padding:26px 28px;box-shadow:var(--shadow-sm);transition:box-shadow .15s;border-top:3px solid var(--blue-300)}
+.card:hover{box-shadow:var(--shadow)}
+.card-label{font-family:'Source Code Pro',monospace;font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--blue-500);margin-bottom:10px;font-weight:600}
+.card-value{font-family:'Source Serif 4',serif;font-size:34px;font-weight:700;line-height:1;color:var(--blue-700)}
+.card-sub{font-size:13px;color:var(--ink3);margin-top:9px}
+.card.red .card-value{color:var(--red)}.card.green .card-value{color:var(--green)}
+.card.purple .card-value{color:var(--purple)}.card.amber .card-value{color:var(--amber)}
+
+/* ── Grid ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-bottom:30px}
+.g1{margin-bottom:30px}
+
+/* ── Panel ── */
+.pnl{background:#fff;border:1px solid var(--border);border-radius:var(--r2);box-shadow:var(--shadow-sm)}
+.pnl-hdr{padding:24px 28px 0}
+.pnl-title{font-family:'Source Serif 4',serif;font-size:17px;font-weight:700;color:var(--blue-700)}
+.pnl-sub{font-size:14px;color:var(--blue-500);margin-top:5px;line-height:1.55}
+.chart-wrap{padding:20px 28px 10px}
+
+/* ── Figure caption ── */
+.fig-caption{font-size:13px;color:var(--ink3);text-align:center;padding:10px 28px 22px;font-style:italic;border-top:1px solid var(--border2);margin-top:6px;line-height:1.6}
+.fig-caption strong{color:var(--blue-900);font-style:normal;font-weight:700}
+
+/* ── Tables ── */
+.tbl-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--r2);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:30px}
+.tbl-toolbar{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--border2);background:var(--blue-50);gap:14px;flex-wrap:wrap}
+.tbl-title{font-family:'Source Serif 4',serif;font-size:16px;font-weight:700;color:var(--blue-700)}
+.search{padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;font-family:'Source Code Pro',monospace;color:var(--ink2);background:#fff;width:260px;outline:none;transition:border-color .13s}
+.search:focus{border-color:var(--blue-700);box-shadow:0 0 0 3px rgba(29,78,183,.12)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead th{background:var(--blue-700);color:rgba(255,255,255,.92);padding:13px 17px;text-align:left;font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{background:var(--blue-900)}
+thead th.asc::after{content:' ↑';opacity:.7}
+thead th.desc::after{content:' ↓';opacity:.7}
+tbody tr{border-bottom:1px solid var(--border2);transition:background .08s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--blue-50)}
+tbody td{padding:12px 17px;color:var(--ink2);vertical-align:middle}
+td.mono{font-family:'Source Code Pro',monospace;font-size:13px}
+td.bold{font-weight:700;color:var(--blue-700)}
+.sig{color:var(--red);font-weight:700}.trend{color:var(--amber);font-weight:600}.ns{color:var(--ink4)}
+
+/* ── Pills & tags ── */
+.pill{display:inline-block;padding:3px 10px;border-radius:11px;font-size:12px;font-family:'Source Code Pro',monospace;font-weight:600}
+.pill-ivw{background:var(--blue-100);color:var(--blue-900)}
+.pill-egger{background:#fef9c3;color:#92400e}
+.pill-wm{background:#dcfce7;color:#14532d}
+.pill-mvmr{background:#ede9fe;color:#4c1d95}
+.dir-tag{font-size:12px;font-family:'Source Code Pro',monospace;color:var(--blue-500);background:var(--blue-50);border:1px solid var(--border);border-radius:4px;padding:3px 9px;font-weight:500}
+
+/* ── Filter bar ── */
+.filt{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:24px}
+.filt-lbl{font-size:14px;color:var(--ink3);margin-right:4px;font-weight:600}
+.fb{padding:7px 18px;border:1.5px solid var(--border);border-radius:22px;font-size:14px;background:#fff;cursor:pointer;color:var(--ink3);transition:all .12s;font-family:'Source Sans 3',sans-serif}
+.fb:hover{border-color:var(--blue-700);color:var(--blue-700)}
+.fb.on{background:var(--blue-700);color:#fff;border-color:var(--blue-700);font-weight:600}
+
+/* ── Tooltip ── */
+.tip{position:fixed;background:var(--blue-900);color:#dbeafe;padding:10px 14px;border-radius:var(--r);font-size:13px;pointer-events:none;z-index:9999;max-width:300px;line-height:1.6;display:none;font-family:'Source Code Pro',monospace;box-shadow:var(--shadow)}
+.empty{text-align:center;padding:64px;color:var(--ink4);font-size:15px}
+
+/* ── Footer ── */
+.footer{background:linear-gradient(135deg,var(--blue-900) 0%,var(--blue-700) 100%);color:rgba(255,255,255,.55);text-align:center;padding:28px;font-size:13px;font-family:'Source Code Pro',monospace;letter-spacing:.05em}
+.footer strong{color:rgba(255,255,255,.9)}
+.footer a{color:rgba(255,255,255,.65);text-decoration:none}
+
+@media(max-width:960px){
+  .hdr-inner,.nav-inner,.main{padding-left:24px;padding-right:24px}
+  .hdr-grid{grid-template-columns:1fr}.hdr-right{text-align:left}
+  .g2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-grid">
+      <div>
+        <div class="hdr-eyebrow">CDC 1.0.0 · Phase B · Nextflow DSL2 · Two-cohort design</div>
+        <h1 class="hdr-title">Mendelian Randomization<br><span>Analysis Report</span></h1>
+        <p class="hdr-sub">
+          Univariable MR · Heterogeneity &amp; Pleiotropy · Multivariable MR<br>
+          IVW · MR-Egger · Weighted Median · MVMR-IVW · MVMR-Egger · MR-PRESSO · Steiger
+        </p>
+      </div>
+      <div class="hdr-right">
+        <div class="hdr-author">__AUTHOR__</div>
+        <div class="hdr-affil">__INSTITUTE__</div>
+        <div class="hdr-affil">__AFFILIATION__</div>
+        <div class="hdr-date">Generated: __DATE__</div>
+      </div>
+    </div>
+    <div class="hdr-bar"></div>
+  </div>
+</header>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-tab active" data-sec="overview">Overview</div>
+    <div class="nav-tab" data-sec="uvmr">Univariable MR</div>
+    <div class="nav-tab" data-sec="forest">Forest Plots</div>
+    <div class="nav-tab" data-sec="heterogeneity">Heterogeneity</div>
+    <div class="nav-tab" data-sec="scatter">Scatter &amp; Funnel</div>
+    <div class="nav-tab" data-sec="loo">Leave-One-Out</div>
+    <div class="nav-tab" data-sec="instruments">Instruments</div>
+    <div class="nav-tab" data-sec="mvmr">MVMR</div>
+  </div>
+</nav>
+
+<div class="tip" id="tip"></div>
+
+<main class="main">
+
+<!-- ═══════════════════════ OVERVIEW ═══════════════════════ -->
+<section class="section active" id="sec-overview">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">Pipeline summary</div>
+    <div class="sec-title">Mendelian Randomization Overview</div>
+    <div class="sec-desc">End-to-end CDC 1.0.0 MR analysis · two cohorts · bidirectional · uvMR + MVMR</div>
+  </div>
+  <div class="cards" id="ov-cards"></div>
+  <div class="g2">
+    <div class="pnl">
+      <div class="pnl-hdr">
+        <div class="pnl-title">IVW Effect Estimates — All Pairs</div>
+        <div class="pnl-sub">β ± 95% CI · red = p &lt; 0.05 · diamond = point estimate</div>
+      </div>
+      <div class="chart-wrap"><div id="ov-forest" style="height:400px"></div></div>
+      <div class="fig-caption"><strong>Figure 1.</strong> Forest plot of IVW causal effect estimates across all pairs. Points (◆) show β; horizontal lines show 95% CI; filled = p&lt;0.05. &nbsp;|&nbsp; <strong>__AUTHOR__</strong> · __INSTITUTE__ · Generated __DATE__</div>
+    </div>
+    <div class="pnl">
+      <div class="pnl-hdr">
+        <div class="pnl-title">Significance Heatmap</div>
+        <div class="pnl-sub">−log₁₀(p) per pair × direction · IVW method</div>
+      </div>
+      <div class="chart-wrap"><div id="ov-heat" style="height:400px"></div></div>
+      <div class="fig-caption"><strong>Figure 2.</strong> Significance heatmap. Colour intensity = −log₁₀(p) by pair and direction; IVW method. &nbsp;|&nbsp; <strong>__AUTHOR__</strong> · __INSTITUTE__ · Generated __DATE__</div>
+    </div>
+  </div>
+  <div class="pnl g1">
+    <div class="pnl-hdr">
+      <div class="pnl-title">Pipeline Methods Guide</div>
+      <div class="pnl-sub">Stage B — Mendelian Randomization</div>
+    </div>
+    <div class="chart-wrap">
+    <table>
+      <thead><tr><th>Stage</th><th>Process</th><th>Method</th><th>Purpose</th><th>Key parameter</th></tr></thead>
+      <tbody>
+        <tr><td>B1</td><td class="mono">BUILD_RSID_MAP</td><td>Python</td><td>CHR:BP → rsID lookup from 1000G bim</td><td class="mono">1000G_dedup.bim</td></tr>
+        <tr><td>B2</td><td class="mono">UNIVARIABLE_MR</td><td>IVW · Egger · W.Median</td><td>Causal effect estimation per pair</td><td class="mono">F &gt; 10 · r² &lt; 0.001</td></tr>
+        <tr><td>B3</td><td class="mono">HETEROGENEITY</td><td>Cochran Q · I² · Egger · Steiger · PRESSO · LOO · single-SNP</td><td>Pleiotropy &amp; instrument diagnostics</td><td class="mono">p &lt; 0.05 = concern</td></tr>
+        <tr><td>B4</td><td class="mono">MVMR</td><td>MVMR-IVW · MVMR-Egger</td><td>Direct effects adjusting co-exposures</td><td class="mono">condF &gt; 10</td></tr>
+        <tr><td>B5</td><td class="mono">MR_FIGURES</td><td>matplotlib · 300 DPI</td><td>Publication figures PNG + PDF</td><td class="mono">F1–F6</td></tr>
+        <tr><td>B6</td><td class="mono">MR_REPORT</td><td>Plotly.js</td><td>Interactive HTML report</td><td class="mono">8 tabs</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ UVMR ═══════════════════════════ -->
+<section class="section" id="sec-uvmr">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">Univariable MR</div>
+    <div class="sec-title">Full Results Table</div>
+    <div class="sec-desc">IVW · MR-Egger · Weighted Median · click column headers to sort</div>
+  </div>
+  <div class="cards" id="uvmr-cards"></div>
+  <div class="tbl-wrap">
+    <div class="tbl-toolbar">
+      <span class="tbl-title">All MR estimates</span>
+      <input class="search" id="uvmr-search" placeholder="Search pair, method, direction…"/>
+    </div>
+    <div style="overflow-x:auto">
+    <table id="uvmr-table">
+      <thead><tr>
+        <th data-col="causal_pair">Causal pair</th>
+        <th data-col="direction">Direction</th>
+        <th data-col="method">Method</th>
+        <th data-col="b">β</th>
+        <th data-col="se">SE</th>
+        <th data-col="pval">P-value</th>
+        <th>95% CI</th>
+        <th data-col="n_snps">N SNPs</th>
+        <th data-col="nsnp">N (total)</th>
+      </tr></thead>
+      <tbody id="uvmr-tbody"></tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ FOREST ═════════════════════════ -->
+<section class="section" id="sec-forest">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">Causal estimates</div>
+    <div class="sec-title">Forest Plots</div>
+    <div class="sec-desc">All estimates ± 95% CI · ◆ = point estimate · filter by method below</div>
+  </div>
+  <div class="filt" id="forest-filt">
+    <span class="filt-lbl">Method:</span>
+    <button class="fb on" data-m="all">All</button>
+    <button class="fb" data-m="Inverse variance weighted">IVW</button>
+    <button class="fb" data-m="MR Egger">Egger</button>
+    <button class="fb" data-m="Weighted median">W.Median</button>
+  </div>
+  <div class="pnl g1">
+    <div class="pnl-hdr">
+      <div class="pnl-title">Univariable MR — Forest Plot</div>
+      <div class="pnl-sub">Horizontal lines = 95% CI · dashed = β = 0 null · p-value annotated right</div>
+    </div>
+    <div class="chart-wrap"><div id="forest-plot" style="min-height:200px"></div></div>
+    <div class="fig-caption"><strong>Figure 3.</strong> Univariable MR forest plot. β ± 95% CI; ◆ filled = p&lt;0.05 significant; coloured by method (IVW / MR-Egger / Weighted Median). &nbsp;|&nbsp; <strong>__AUTHOR__</strong> · __INSTITUTE__ · Generated __DATE__</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ HETEROGENEITY ══════════════════ -->
+<section class="section" id="sec-heterogeneity">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">Pleiotropy diagnostics</div>
+    <div class="sec-title">Heterogeneity Tests</div>
+    <div class="sec-desc">Cochran Q · I² · MR-Egger intercept · Steiger filtering · MR-PRESSO · Leave-one-out · Single-SNP</div>
+  </div>
+  <div class="g2">
+    <div class="pnl">
+      <div class="pnl-hdr">
+        <div class="pnl-title">I² Statistic per Analysis</div>
+        <div class="pnl-sub">0–24%: low · 25–49%: moderate · 50–74%: substantial · ≥75%: high</div>
+      </div>
+      <div class="chart-wrap"><div id="het-i2" style="height:360px"></div></div>
+      <div class="fig-caption"><strong>Figure 4a.</strong> Heterogeneity (I²) per causal pair. Dotted thresholds: 25% low, 50% moderate, 75% high. Red bars = p&lt;0.05. &nbsp;|&nbsp; <strong>__AUTHOR__</strong> · __INSTITUTE__ · Generated __DATE__</div>
+    </div>
+    <div class="pnl">
+      <div class="pnl-hdr">
+        <div class="pnl-title">Egger Intercept P-values</div>
+        <div class="pnl-sub">p &lt; 0.05 (red dashed) suggests directional pleiotropy</div>
+      </div>
+      <div class="chart-wrap"><div id="het-egger" style="height:360px"></div></div>
+      <div class="fig-caption"><strong>Figure 4b.</strong> MR-Egger intercept −log₁₀(p) per pair. Red dashed line = p=0.05 significance threshold; values above indicate directional pleiotropy. &nbsp;|&nbsp; <strong>__AUTHOR__</strong> · __INSTITUTE__ · Generated __DATE__</div>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-toolbar">
+      <span class="tbl-title">All heterogeneity &amp; pleiotropy tests</span>
+      <input class="search" id="het-search" placeholder="Search test, pair…"/>
+    </div>
+    <div style="overflow-x:auto">
+    <table id="het-table">
+      <thead><tr>
+        <th>Causal pair</th><th>Direction</th><th>Test</th><th>Method</th>
+        <th>Statistic</th><th>df</th><th>P-value</th><th>I²</th>
+        <th>N SNPs</th><th>Interpretation</th>
+      </tr></thead>
+      <tbody id="het-tbody"></tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SCATTER & FUNNEL ═══════════════ -->
+<section class="section" id="sec-scatter">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">Instrument diagnostics</div>
+    <div class="sec-title">Scatter &amp; Funnel Plots</div>
+    <div class="sec-desc">Select a causal pair · scatter = SNP–exposure vs SNP–outcome · funnel = Wald ratio vs precision</div>
+  </div>
+  <div class="filt" id="pair-filt"><span class="filt-lbl">Pair:</span></div>
+  <div class="g2">
+    <div class="pnl">
+      <div class="pnl-hdr">
+        <div class="pnl-title">Scatter Plot</div>
+        <div class="pnl-sub">Each point = one instrument · IVW slope (dashed) = causal estimate</div>
+      </div>
+      <div class="chart-wrap"><div id="scatter-plot" style="height:360px"></div></div>
+      <div class="fig-caption"><strong>Figure 5a.</strong> Scatter plot of SNP–exposure vs SNP–outcome effect estimates. Dashed line = IVW slope (origin-constrained causal estimate). &nbsp;|&nbsp; <strong>__AUTHOR__</strong> · __INSTITUTE__ · Generated __DATE__</div>
+    </div>
+    <div class="pnl">
+      <div class="pnl-hdr">
+        <div class="pnl-title">Funnel Plot</div>
+        <div class="pnl-sub">Wald ratio vs 1/√F-stat · asymmetry = possible pleiotropy</div>
+      </div>
+      <div class="chart-wrap"><div id="funnel-plot" style="height:360px"></div></div>
+      <div class="fig-caption"><strong>Figure 5b.</strong> Funnel plot: Wald ratio vs instrument precision (1/√F-stat). Asymmetry suggests possible pleiotropy. &nbsp;|&nbsp; <strong>__AUTHOR__</strong> · __INSTITUTE__ · Generated __DATE__</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ LEAVE-ONE-OUT ══════════════════ -->
+<section class="section" id="sec-loo">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">Stability analysis</div>
+    <div class="sec-title">Leave-One-Out Analysis</div>
+    <div class="sec-desc">IVW estimate when each instrument is excluded · stable result = no single influential variant</div>
+  </div>
+  <div class="filt" id="loo-filt"><span class="filt-lbl">Analysis:</span></div>
+  <div class="pnl g1">
+    <div class="pnl-hdr">
+      <div class="pnl-title">LOO Forest Plot</div>
+      <div class="pnl-sub">● circle = IVW estimate excluding named SNP · dashed = full-sample IVW</div>
+    </div>
+    <div class="chart-wrap"><div id="loo-plot" style="min-height:200px"></div></div>
+    <div class="fig-caption"><strong>Figure 6.</strong> Leave-one-out analysis: IVW estimate when each instrument is excluded in turn. Stability of estimates suggests no single influential variant. &nbsp;|&nbsp; <strong>__AUTHOR__</strong> · __INSTITUTE__ · Generated __DATE__</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ INSTRUMENTS ════════════════════ -->
+<section class="section" id="sec-instruments">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">Genetic instruments</div>
+    <div class="sec-title">Instrument Table</div>
+    <div class="sec-desc">All post-clumping instruments · F &gt; 10 = strong instrument · per-SNP Wald ratios</div>
+  </div>
+  <div class="cards" id="inst-cards"></div>
+  <div class="tbl-wrap">
+    <div class="tbl-toolbar">
+      <span class="tbl-title">All instruments</span>
+      <input class="search" id="inst-search" placeholder="Search SNP, exposure…"/>
+    </div>
+    <div style="overflow-x:auto;max-height:500px;overflow-y:auto">
+    <table id="inst-table">
+      <thead><tr>
+        <th>SNP</th><th>Exposure</th><th>Outcome</th><th>Direction</th>
+        <th>β exposure</th><th>β outcome</th><th>Wald ratio</th><th>F-stat</th>
+      </tr></thead>
+      <tbody id="inst-tbody"></tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ MVMR ═══════════════════════════ -->
+<section class="section" id="sec-mvmr">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">Multivariable MR</div>
+    <div class="sec-title">MVMR Results</div>
+    <div class="sec-desc">Direct causal effects of each exposure adjusting for co-exposures · MVMR-IVW + MVMR-Egger</div>
+  </div>
+  <div class="cards" id="mvmr-cards"></div>
+  <div class="g2">
+    <div class="pnl">
+      <div class="pnl-hdr">
+        <div class="pnl-title">MVMR Forest — Direct Effects</div>
+        <div class="pnl-sub">β (direct) ± 95% CI · MVMR-IVW · coloured by outcome</div>
+      </div>
+      <div class="chart-wrap"><div id="mvmr-forest" style="min-height:280px"></div></div>
+      <div class="fig-caption"><strong>Figure 7a.</strong> MVMR forest plot of direct causal effects (MVMR-IVW). β ± 95% CI; ◆ filled = p&lt;0.05; coloured by outcome. Conditional F-statistics annotated. &nbsp;|&nbsp; <strong>__AUTHOR__</strong> · __INSTITUTE__ · Generated __DATE__</div>
+    </div>
+    <div class="pnl">
+      <div class="pnl-hdr">
+        <div class="pnl-title">Conditional F-statistics</div>
+        <div class="pnl-sub">Instrument strength per exposure · F &lt; 10 (red) = weak instruments</div>
+      </div>
+      <div class="chart-wrap"><div id="mvmr-fstat" style="height:320px"></div></div>
+      <div class="fig-caption"><strong>Figure 7b.</strong> Conditional F-statistics for MVMR exposures. Red dashed line = F=10 (weak instrument threshold). &nbsp;|&nbsp; <strong>__AUTHOR__</strong> · __INSTITUTE__ · Generated __DATE__</div>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-toolbar">
+      <span class="tbl-title">All MVMR estimates</span>
+      <input class="search" id="mvmr-search" placeholder="Search exposure, outcome…"/>
+    </div>
+    <div style="overflow-x:auto">
+    <table id="mvmr-table">
+      <thead><tr>
+        <th>Exposures</th><th>Outcome</th><th>Direction</th><th>Method</th>
+        <th>Exposure</th><th>β (direct)</th><th>SE</th><th>P-value</th>
+        <th>N SNPs</th><th>Cond. F</th>
+      </tr></thead>
+      <tbody id="mvmr-tbody"></tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <strong>__AUTHOR__</strong> &nbsp;·&nbsp; __INSTITUTE__ &nbsp;·&nbsp;
+  CDC 1.0.0 MR Pipeline &nbsp;·&nbsp; Generated __DATE__ &nbsp;·&nbsp;
+  Nextflow DSL2 &nbsp;·&nbsp; <a href="https://__GITHUB__">__GITHUB__</a>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  DATA — injected by render_mr_report.py
+// ═══════════════════════════════════════════════════════════════
+const MR_DATA   = __MR_DATA__;
+const WALD_DATA = __WALD_DATA__;
+const HET_DATA  = __HET_DATA__;
+const LOO_DATA  = __LOO_DATA__;
+const SNP_DATA  = __SNP_DATA__;
+const MVMR_DATA = __MVMR_DATA__;
+
+// ── Palette ─────────────────────────────────────────────────
+const C = {
+  blue:"#1f4e8c", red:"#c0392b", green:"#1e8449",
+  amber:"#b7770d", purple:"#6c3483", grey:"#6c757d",
+  zero:"#adb5bd"
+};
+const METHOD_COL = {
+  "inverse variance weighted": C.blue,
+  "mr egger":                  C.amber,
+  "weighted median":           C.green,
+  "mvmr-ivw":                  C.blue,
+  "mvmr-egger":                C.amber,
+};
+const OUT_COLS = [C.blue, C.green, C.red, C.purple, C.amber];
+const mCol = m => METHOD_COL[(m||"").toLowerCase().trim()] || C.grey;
+
+// ── Format helpers ───────────────────────────────────────────
+const f3  = v => (isNaN(+v)||v==null||v==="") ? "—" : (+v).toFixed(3);
+const fP  = v => { const n=+v; if(isNaN(n)) return "—";
+                    if(n<1e-4) return n.toExponential(2);
+                    return n.toFixed(4); };
+const pCls = v => { const n=+v; if(isNaN(n)) return "";
+                     return n<0.05?"sig":n<0.1?"trend":"ns"; };
+const methPill = m => {
+  const ml=(m||"").toLowerCase();
+  if(ml.includes("inverse")) return `<span class="pill pill-ivw">IVW</span>`;
+  if(ml.includes("egger"))   return `<span class="pill pill-egger">Egger</span>`;
+  if(ml.includes("median"))  return `<span class="pill pill-wm">W.Median</span>`;
+  if(ml.includes("mvmr"))    return `<span class="pill pill-mvmr">MVMR</span>`;
+  return `<span class="pill">${m||""}</span>`;
+};
+
+// ── Tooltip ──────────────────────────────────────────────────
+const tip = document.getElementById("tip");
+const showTip=(e,h)=>{tip.innerHTML=h;tip.style.display="block";
+  tip.style.left=(e.clientX+14)+"px";tip.style.top=(e.clientY-10)+"px";};
+const hideTip=()=>tip.style.display="none";
+
+// ── Plotly base layout ───────────────────────────────────────
+const PLcfg = {responsive:true, displayModeBar:false};
+const PLbase = (o={}) => ({
+  paper_bgcolor:"rgba(0,0,0,0)", plot_bgcolor:"rgba(0,0,0,0)",
+  font:{family:"Source Sans 3, sans-serif", size:13, color:"#1e4db7"},
+  xaxis:{showgrid:false, zeroline:false, linecolor:"#c5d8ee", linewidth:1.2,
+         tickfont:{size:12, color:"#2d4175"}, title:{font:{size:13, color:"#1e4db7"}}, automargin:true},
+  yaxis:{showgrid:false, zeroline:false, linecolor:"#c5d8ee", linewidth:1.2,
+         tickfont:{size:12, color:"#2d4175"}, title:{font:{size:13, color:"#1e4db7"}}, automargin:true},
+  legend:{bgcolor:"rgba(255,255,255,0.95)", bordercolor:"#c5d8ee", borderwidth:1,
+          font:{size:12, color:"#1a2c5b"}, orientation:"v", x:1.02, xanchor:"left"},
+  margin:{l:220, r:110, t:32, b:56},
+  ...o
+});
+
+// ── Tab navigation ───────────────────────────────────────────
+document.querySelectorAll(".nav-tab").forEach(t => {
+  t.addEventListener("click", () => {
+    document.querySelectorAll(".nav-tab").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    document.getElementById("sec-"+t.dataset.sec).classList.add("active");
+    const s=t.dataset.sec;
+    if(s==="uvmr")          { buildUvmrTable(MR_DATA); buildUvmrCards(); }
+    if(s==="forest")          drawForest("all");
+    if(s==="heterogeneity") { buildHetTable(HET_DATA); drawHetCharts(); }
+    if(s==="scatter")         initScatterFilt();
+    if(s==="loo")             initLooFilt();
+    if(s==="instruments")   { buildInstTable(WALD_DATA); buildInstCards(); }
+    if(s==="mvmr")          { buildMvmrTable(MVMR_DATA); drawMvmrCharts(); buildMvmrCards(); }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  OVERVIEW
+// ═══════════════════════════════════════════════════════════════
+function buildOverview() {
+  const sig   = MR_DATA.filter(d=>+d.pval<0.05).length;
+  const pairs = [...new Set(MR_DATA.map(d=>d.causal_pair))].length;
+  const snps  = [...new Set(WALD_DATA.map(d=>d.SNP))].length;
+  document.getElementById("ov-cards").innerHTML = [
+    {l:"Causal pairs",       v:pairs,           s:"both directions",   c:"blue"},
+    {l:"MR estimates",       v:MR_DATA.length,  s:"3 methods × 2 dir", c:""},
+    {l:"p < 0.05",           v:sig,             s:"any method",        c:"red"},
+    {l:"Unique instruments", v:snps,            s:"post-clumping",     c:"green"},
+    {l:"MVMR estimates",     v:MVMR_DATA.length,s:"IVW + Egger",       c:"purple"},
+    {l:"Het tests",          v:HET_DATA.length, s:"all diagnostics",   c:"amber"},
+  ].map(x=>`<div class="card ${x.c}">
+    <div class="card-label">${x.l}</div>
+    <div class="card-value">${x.v}</div>
+    <div class="card-sub">${x.s}</div></div>`).join("");
+  drawOvForest();
+  drawOvHeat();
+}
+
+function drawOvForest() {
+  const ivw = MR_DATA.filter(d=>d.method&&d.method.toLowerCase().includes("inverse"));
+  if(!ivw.length) return;
+  const n   = ivw.length;
+  const bv  = ivw.map(d=>+d.b||0);
+  const lo  = ivw.map(d=>(+d.b||0)-1.96*(+d.se||0));
+  const hi  = ivw.map(d=>(+d.b||0)+1.96*(+d.se||0));
+  const lbls= ivw.map(d=>`${d.causal_pair||""} · ${(d.direction||"").replace("->","→")}`);
+  const cols= ivw.map(d=>+d.pval<0.05?C.red:C.blue);
+
+  const shapes=[{type:"line",x0:0,x1:0,y0:-0.5,y1:n-0.5,
+    line:{color:C.zero,width:1.2,dash:"dash"}}];
+  // CI lines via shapes
+  ivw.forEach((d,i)=>{
+    shapes.push({type:"line",x0:lo[i],x1:hi[i],y0:i,y1:i,
+      line:{color:cols[i],width:2}});
+    shapes.push({type:"line",x0:lo[i],x1:lo[i],y0:i-0.13,y1:i+0.13,
+      line:{color:cols[i],width:1.5}});
+    shapes.push({type:"line",x0:hi[i],x1:hi[i],y0:i-0.13,y1:i+0.13,
+      line:{color:cols[i],width:1.5}});
+  });
+
+  // Annotations: p-values
+  const annots=ivw.map((d,i)=>({
+    x:Math.max(...hi)+0.02, y:i, text:fP(d.pval),
+    xanchor:"left", showarrow:false,
+    font:{size:9.5,color:+d.pval<0.05?C.red:C.grey,
+          family:"Source Code Pro,monospace"}
+  }));
+  annots.push({x:Math.max(...hi)+0.02, y:n-0.4, text:"<b>P-value</b>",
+    xanchor:"left", showarrow:false,
+    font:{size:10, color:"#24292f", family:"Source Sans 3,sans-serif"}});
+
+  Plotly.newPlot("ov-forest",[{
+    type:"scatter", mode:"markers", x:bv, y:lbls,
+    marker:{symbol:"diamond",size:10,color:cols,
+            line:{color:ivw.map(d=>+d.pval<0.05?C.red:C.blue),width:1.8}},
+    error_x:{visible:false},
+    hovertemplate:ivw.map((d,i)=>
+      `<b>${lbls[i]}</b><br>β=${f3(d.b)}<br>95% CI [${f3(lo[i])}, ${f3(hi[i])}]<br>p=${fP(d.pval)}<extra></extra>`),
+    showlegend:false
+  }], PLbase({
+    height:400, margin:{l:280,r:100,t:24,b:40},
+    xaxis:{title:{text:"β (IVW)",standoff:10},
+           zeroline:false, showgrid:false, linecolor:"#d0d7de"},
+    yaxis:{zeroline:false, showgrid:false, linecolor:"#d0d7de",
+           tickfont:{size:10}, automargin:true},
+    shapes, annotations:annots, showlegend:false
+  }), PLcfg);
+}
+
+function drawOvHeat() {
+  const ivw  = MR_DATA.filter(d=>d.method&&d.method.toLowerCase().includes("inverse"));
+  if(!ivw.length) return;
+  const pairs = [...new Set(ivw.map(d=>d.causal_pair))];
+  const dirs  = [...new Set(ivw.map(d=>d.direction))];
+  const z     = pairs.map(p=>dirs.map(d=>{
+    const r=ivw.find(x=>x.causal_pair===p&&x.direction===d);
+    return r?Math.min(-Math.log10(+r.pval||1),8):0; }));
+  const txt   = pairs.map(p=>dirs.map(d=>{
+    const r=ivw.find(x=>x.causal_pair===p&&x.direction===d);
+    return r?fP(r.pval):""; }));
+  Plotly.newPlot("ov-heat",[{
+    type:"heatmap", z, x:dirs, y:pairs, text:txt,
+    texttemplate:"%{text}", colorscale:"Blues",
+    hovertemplate:"<b>%{y}</b><br>%{x}<br>−log₁₀p = %{z:.2f}<extra></extra>",
+    showscale:true
+  }], PLbase({
+    height:400, margin:{l:160,r:20,t:24,b:80},
+    xaxis:{showgrid:false, zeroline:false, tickangle:-20, linecolor:"#d0d7de"},
+    yaxis:{showgrid:false, zeroline:false, automargin:true},
+    showlegend:false
+  }), PLcfg);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UVMR TABLE
+// ═══════════════════════════════════════════════════════════════
+function buildUvmrCards() {
+  const sig  = MR_DATA.filter(d=>+d.pval<0.05).length;
+  const pairs= [...new Set(MR_DATA.map(d=>d.causal_pair))].length;
+  document.getElementById("uvmr-cards").innerHTML=[
+    {l:"Causal pairs",v:pairs,s:"both directions",c:"blue"},
+    {l:"Estimates",   v:MR_DATA.length,s:"3 methods",c:""},
+    {l:"p < 0.05",    v:sig,s:"any method",c:"red"},
+  ].map(x=>`<div class="card ${x.c}"><div class="card-label">${x.l}</div>
+    <div class="card-value">${x.v}</div><div class="card-sub">${x.s}</div></div>`).join("");
+}
+function buildUvmrTable(data) {
+  const tbody=document.getElementById("uvmr-tbody");
+  tbody.innerHTML="";
+  if(!data.length){ tbody.innerHTML='<tr><td colspan="9" class="empty">No MR results</td></tr>'; return; }
+  data.forEach(d=>{
+    const lo=(+d.b||0)-1.96*(+d.se||0), hi=(+d.b||0)+1.96*(+d.se||0);
+    tbody.insertAdjacentHTML("beforeend",`<tr>
+      <td class="bold">${d.causal_pair||"—"}</td>
+      <td><span class="dir-tag">${(d.direction||"").replace("->","→")}</span></td>
+      <td>${methPill(d.method)}</td>
+      <td class="mono">${f3(d.b)}</td>
+      <td class="mono">${f3(d.se)}</td>
+      <td class="mono ${pCls(d.pval)}">${fP(d.pval)}</td>
+      <td class="mono">[${f3(lo)}, ${f3(hi)}]</td>
+      <td class="mono">${d.n_snps||d.nsnp||"—"}</td>
+      <td class="mono">${d.nsnp||"—"}</td>
+    </tr>`);
+  });
+}
+document.getElementById("uvmr-search").addEventListener("input",e=>{
+  const q=e.target.value.toLowerCase();
+  buildUvmrTable(MR_DATA.filter(d=>
+    (d.causal_pair||"").toLowerCase().includes(q)||
+    (d.method||"").toLowerCase().includes(q)||
+    (d.direction||"").toLowerCase().includes(q)));
+});
+document.querySelector("#uvmr-table thead").addEventListener("click",e=>{
+  const th=e.target.closest("th"); if(!th||!th.dataset.col) return;
+  const col=th.dataset.col, asc=!th.classList.contains("asc");
+  document.querySelectorAll("#uvmr-table th").forEach(t=>t.classList.remove("asc","desc"));
+  th.classList.add(asc?"asc":"desc");
+  buildUvmrTable([...MR_DATA].sort((a,b)=>{
+    const av=isNaN(+a[col])?a[col]||"":+a[col], bv=isNaN(+b[col])?b[col]||"":+b[col];
+    return asc?(av>bv?1:-1):(av<bv?1:-1);
+  }));
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  FOREST PLOT
+// ═══════════════════════════════════════════════════════════════
+let curForestM="all";
+function drawForest(method) {
+  curForestM=method;
+  let data=MR_DATA.filter(d=>d.b&&d.se);
+  if(method!=="all") data=data.filter(d=>(d.method||"")===method);
+  if(!data.length){ document.getElementById("forest-plot").innerHTML=""; return; }
+  const n   = data.length;
+  const rowH= 30;
+  const h   = n*rowH+90;
+  const bv  = data.map(d=>+d.b||0);
+  const lo  = data.map(d=>(+d.b||0)-1.96*(+d.se||0));
+  const hi  = data.map(d=>(+d.b||0)+1.96*(+d.se||0));
+  const lbls= data.map(d=>`${d.causal_pair||""} · ${(d.direction||"").replace("->","→")}`);
+
+  const allX = [...lo,...hi,0];
+  const xmin = Math.min(...allX), xmax=Math.max(...allX);
+  const pad  = (xmax-xmin)*0.12||0.3;
+
+  const shapes=[{type:"line",x0:0,x1:0,y0:-0.5,y1:n-0.5,
+    line:{color:C.zero,width:1.2,dash:"dash"}}];
+  data.forEach((d,i)=>{
+    const col=mCol(d.method);
+    shapes.push({type:"line",x0:lo[i],x1:hi[i],y0:i,y1:i,line:{color:col,width:2}});
+    shapes.push({type:"line",x0:lo[i],x1:lo[i],y0:i-0.13,y1:i+0.13,line:{color:col,width:1.5}});
+    shapes.push({type:"line",x0:hi[i],x1:hi[i],y0:i-0.13,y1:i+0.13,line:{color:col,width:1.5}});
+    // Row stripe
+    if(i%2===0) shapes.push({type:"rect",x0:xmin-pad*2,x1:xmax+pad*2,y0:i-0.5,y1:i+0.5,
+      fillcolor:"rgba(240,242,245,0.5)",line:{width:0},layer:"below"});
+  });
+
+  const annots = data.map((d,i)=>({
+    x:xmax+pad*0.6, y:i, text:fP(d.pval), xanchor:"left", showarrow:false,
+    font:{size:9.5, color:+d.pval<0.05?C.red:C.grey,
+          family:"Source Code Pro,monospace",
+          weight:+d.pval<0.05?"bold":"normal"}
+  }));
+  annots.push({x:xmax+pad*0.6, y:n-0.35, text:"<b>P-value</b>",
+    xanchor:"left",showarrow:false,
+    font:{size:10,color:"#24292f",family:"Source Sans 3,sans-serif"}});
+
+  document.getElementById("forest-plot").style.height=h+"px";
+
+  // Build traces per method for legend
+  const methods=[...new Set(data.map(d=>d.method))];
+  const traces=methods.map(m=>{
+    const rows=data.filter(d=>d.method===m);
+    const idxs=rows.map(r=>data.indexOf(r));
+    return {
+      type:"scatter",mode:"markers",name:m,
+      x:rows.map(d=>+d.b||0), y:idxs.map(i=>lbls[i]),
+      marker:{symbol:"diamond",size:10,color:mCol(m),
+              line:{color:mCol(m),width:1.8},
+              opacity:rows.map(d=>+d.pval<0.05?1:0.45)},
+      hovertemplate:rows.map((_,j)=>`<b>${lbls[idxs[j]]}</b><br>β=${f3(rows[j].b)}<br>
+        95%CI [${f3((+rows[j].b||0)-1.96*(+rows[j].se||0))}, ${f3((+rows[j].b||0)+1.96*(+rows[j].se||0))}]<br>
+        p=${fP(rows[j].pval)}<extra></extra>`),
+      showlegend:true
+    };
+  });
+
+  Plotly.newPlot("forest-plot", traces, PLbase({
+    height:h, margin:{l:300,r:110,t:24,b:40},
+    xaxis:{title:{text:"Causal effect estimate (β)",standoff:10},
+           range:[xmin-pad,xmax+pad],
+           zeroline:false, showgrid:false, linecolor:"#d0d7de"},
+    yaxis:{zeroline:false, showgrid:false, linecolor:"#d0d7de", automargin:true},
+    shapes, annotations:annots,
+    legend:{x:1.01,xanchor:"left",y:0.5,yanchor:"middle",font:{size:10}}
+  }), PLcfg);
+}
+document.getElementById("forest-filt").addEventListener("click",e=>{
+  if(!e.target.classList.contains("fb")) return;
+  document.querySelectorAll("#forest-filt .fb").forEach(b=>b.classList.remove("on"));
+  e.target.classList.add("on");
+  drawForest(e.target.dataset.m||"all");
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  HETEROGENEITY
+// ═══════════════════════════════════════════════════════════════
+function buildHetTable(data) {
+  const tbody=document.getElementById("het-tbody");
+  tbody.innerHTML="";
+  if(!data.length){ tbody.innerHTML='<tr><td colspan="10" class="empty">No heterogeneity results</td></tr>'; return; }
+  data.forEach(d=>{
+    tbody.insertAdjacentHTML("beforeend",`<tr>
+      <td class="bold">${d.causal_pair||"—"}</td>
+      <td><span class="dir-tag">${(d.direction||"").replace("->","→")}</span></td>
+      <td class="mono">${d.test||"—"}</td>
+      <td>${d.method||"—"}</td>
+      <td class="mono">${f3(d.statistic)}</td>
+      <td class="mono">${isNaN(+d.df)?"—":(+d.df).toFixed(0)}</td>
+      <td class="mono ${pCls(d.pvalue)}">${fP(d.pvalue)}</td>
+      <td class="mono">${isNaN(+d.i2)?"—":(+d.i2).toFixed(1)+"%"}</td>
+      <td class="mono">${d.n_snps||"—"}</td>
+      <td style="font-size:11px;color:var(--ink4);max-width:260px">${d.note||""}</td>
+    </tr>`);
+  });
+}
+document.getElementById("het-search").addEventListener("input",e=>{
+  const q=e.target.value.toLowerCase();
+  buildHetTable(HET_DATA.filter(d=>
+    (d.causal_pair||"").toLowerCase().includes(q)||
+    (d.test||"").toLowerCase().includes(q)||
+    (d.direction||"").toLowerCase().includes(q)));
+});
+
+function drawHetCharts() {
+  // I² bar chart
+  const i2 = HET_DATA.filter(d=>d.test==="I2");
+  if(i2.length) {
+    const lbls = i2.map(d=>`${d.causal_pair||""} [${(d.direction||"").replace("->","→")}]`);
+    const vals = i2.map(d=>+d.i2||0);
+    const cols = vals.map(v=>v>=75?C.red:v>=50?C.amber:v>=25?"#2e86c1":C.green);
+    const shapes=[25,50,75].map(v=>({
+      type:"line",x0:v,x1:v,y0:-0.5,y1:i2.length-0.5,
+      line:{color:"#bdc3c7",width:1,dash:"dot"}}));
+    const annots=[25,50,75].map(v=>({
+      x:v,y:-0.7,text:`${v}%`,xanchor:"center",showarrow:false,
+      font:{size:9,color:"#adb5bd",family:"Source Code Pro,monospace"}}));
+    Plotly.newPlot("het-i2",[{
+      type:"bar", x:vals, y:lbls, orientation:"h",
+      marker:{color:cols, line:{color:"white",width:0.5}},
+      hovertemplate:"<b>%{y}</b><br>I² = %{x:.1f}%<extra></extra>"
+    }], PLbase({
+      height:360, margin:{l:230,r:30,t:24,b:40},
+      xaxis:{title:{text:"I² (%)",standoff:8},range:[0,105],
+             zeroline:false, showgrid:false, linecolor:"#d0d7de"},
+      yaxis:{zeroline:false, showgrid:false, automargin:true},
+      shapes, annotations:annots, showlegend:false
+    }), PLcfg);
+  }
+
+  // Egger intercept p-values
+  const eg = HET_DATA.filter(d=>d.test==="Egger_intercept");
+  if(eg.length) {
+    const lbls = eg.map(d=>`${d.causal_pair||""} [${(d.direction||"").replace("->","→")}]`);
+    const lps  = eg.map(d=>Math.min(-Math.log10(+d.pvalue||1),8));
+    const cols = lps.map(v=>v>-Math.log10(0.05)?C.red:C.blue);
+    const sigLine = -Math.log10(0.05);
+    Plotly.newPlot("het-egger",[{
+      type:"bar", x:lps, y:lbls, orientation:"h",
+      marker:{color:cols, line:{color:"white",width:0.5}},
+      hovertemplate:"<b>%{y}</b><br>−log₁₀(p) = %{x:.2f}<extra></extra>"
+    }], PLbase({
+      height:360, margin:{l:230,r:30,t:24,b:40},
+      xaxis:{title:{text:"−log₁₀(p)",standoff:8},
+             zeroline:false, showgrid:false, linecolor:"#d0d7de"},
+      yaxis:{zeroline:false, showgrid:false, automargin:true},
+      shapes:[{type:"line",x0:sigLine,x1:sigLine,y0:-0.5,y1:eg.length-0.5,
+               line:{color:C.red,width:1.5,dash:"dash"}}],
+      annotations:[{x:sigLine,y:eg.length-0.3,text:"p=0.05",xanchor:"left",
+                    showarrow:false,font:{size:9,color:C.red}}],
+      showlegend:false
+    }), PLcfg);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SCATTER & FUNNEL
+// ═══════════════════════════════════════════════════════════════
+let curPair=null;
+function initScatterFilt() {
+  const analyses=[...new Set(WALD_DATA.map(d=>
+    `${d.exposure||""}→${d.outcome||""} [${d.direction||""}]`))].filter(Boolean);
+  const el=document.getElementById("pair-filt");
+  el.innerHTML='<span class="filt-lbl">Pair:</span>';
+  analyses.forEach((a,i)=>{
+    const b=document.createElement("button");
+    b.className="fb"+(i===0?" on":""); b.textContent=a;
+    b.addEventListener("click",()=>{
+      document.querySelectorAll("#pair-filt .fb").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on"); curPair=a; drawScatter(a); drawFunnel(a);
+    });
+    el.appendChild(b);
+  });
+  if(analyses.length){ curPair=analyses[0]; drawScatter(analyses[0]); drawFunnel(analyses[0]); }
+}
+function getWald(analysis) {
+  return WALD_DATA.filter(d=>`${d.exposure||""}→${d.outcome||""} [${d.direction||""}]`===analysis);
+}
+function drawScatter(analysis) {
+  const data=getWald(analysis).filter(d=>d.beta_exp&&d.beta_out);
+  if(!data.length) return;
+  const bx=data.map(d=>+d.beta_exp), by=data.map(d=>+d.beta_out);
+  const sey=data.map(d=>+d.se_out||0);
+  const w_ivw=sey.map(s=>1/(s*s+1e-12));
+  const slope=w_ivw.reduce((s,w,i)=>s+w*bx[i]*by[i],0)/
+               w_ivw.reduce((s,w,i)=>s+w*bx[i]*bx[i],0);
+  const xmin=Math.min(...bx)*1.15, xmax=Math.max(...bx)*1.15;
+  Plotly.newPlot("scatter-plot",[
+    {type:"scatter",mode:"markers",name:"Instruments",
+     x:bx, y:by,
+     error_y:{type:"data",array:sey.map(s=>1.96*s),arrayminus:sey.map(s=>1.96*s),
+              color:"rgba(31,78,140,0.2)",thickness:1.2,width:0},
+     marker:{size:8,color:C.blue,opacity:0.75,line:{color:"white",width:0.8}},
+     hovertemplate:data.map(d=>
+       `<b>${d.SNP||""}</b><br>β_exp = ${f3(d.beta_exp)}<br>β_out = ${f3(d.beta_out)}<extra></extra>`),
+     showlegend:true},
+    {type:"scatter",mode:"lines",name:`IVW β = ${slope.toFixed(3)}`,
+     x:[xmin,xmax], y:[slope*xmin,slope*xmax],
+     line:{color:C.blue,width:2,dash:"dash"}, hoverinfo:"skip", showlegend:true}
+  ], PLbase({
+    height:360, margin:{l:60,r:20,t:24,b:55},
+    xaxis:{title:{text:"SNP–exposure β",standoff:10},
+           zeroline:true, zerolinecolor:C.zero, zerolinewidth:1,
+           showgrid:false, linecolor:"#d0d7de"},
+    yaxis:{title:{text:"SNP–outcome β",standoff:10},
+           zeroline:true, zerolinecolor:C.zero, zerolinewidth:1,
+           showgrid:false, linecolor:"#d0d7de"},
+    legend:{x:1.01, xanchor:"left", y:0.9}
+  }), PLcfg);
+}
+function drawFunnel(analysis) {
+  const data=getWald(analysis).filter(d=>d.wald_ratio&&d.f_stat&&+d.f_stat>0);
+  if(!data.length) return;
+  const wr  = data.map(d=>+d.wald_ratio);
+  const prec= data.map(d=>1/Math.sqrt(+d.f_stat));
+  const med = [...wr].sort((a,b)=>a-b)[Math.floor(wr.length/2)]||0;
+  Plotly.newPlot("funnel-plot",[
+    {type:"scatter",mode:"markers",name:"Instruments",
+     x:wr, y:prec,
+     marker:{size:8,color:C.amber,opacity:0.75,line:{color:"white",width:0.8}},
+     hovertemplate:data.map(d=>
+       `<b>${d.SNP||""}</b><br>Wald = ${f3(d.wald_ratio)}<br>1/√F = ${(1/Math.sqrt(+d.f_stat)).toFixed(3)}<extra></extra>`),
+     showlegend:false}
+  ], PLbase({
+    height:360, margin:{l:60,r:20,t:24,b:55},
+    xaxis:{title:{text:"Wald ratio",standoff:10},
+           zeroline:true, zerolinecolor:C.zero, zerolinewidth:1,
+           showgrid:false, linecolor:"#d0d7de"},
+    yaxis:{title:{text:"1 / √F-stat",standoff:10},autorange:"reversed",
+           zeroline:false, showgrid:false, linecolor:"#d0d7de"},
+    shapes:[{type:"line",x0:med,x1:med,y0:0,y1:Math.max(...prec)*1.05,
+             line:{color:C.blue,width:1.5,dash:"dash"}}],
+    annotations:[{x:med,y:Math.max(...prec)*1.08,text:`Median = ${f3(med)}`,
+                  xanchor:"center",showarrow:false,
+                  font:{size:9,color:C.blue,family:"Source Code Pro,monospace"}}],
+    showlegend:false
+  }), PLcfg);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LEAVE-ONE-OUT
+// ═══════════════════════════════════════════════════════════════
+function initLooFilt() {
+  const analyses=[...new Set(LOO_DATA.map(d=>
+    d.analysis_id||d.causal_pair||""))].filter(Boolean);
+  const el=document.getElementById("loo-filt");
+  el.innerHTML='<span class="filt-lbl">Analysis:</span>';
+  analyses.forEach((a,i)=>{
+    const b=document.createElement("button");
+    b.className="fb"+(i===0?" on":"");
+    b.textContent=a.replace(/__/g," · ");
+    b.addEventListener("click",()=>{
+      document.querySelectorAll("#loo-filt .fb").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on"); drawLoo(a);
+    });
+    el.appendChild(b);
+  });
+  if(analyses.length) drawLoo(analyses[0]);
+}
+function drawLoo(analysis) {
+  const data=LOO_DATA.filter(d=>(d.analysis_id||d.causal_pair||"")===analysis);
+  if(!data.length) return;
+  const bv  = data.map(d=>+d.b||+d.beta||0);
+  const se  = data.map(d=>+d.se||0);
+  const lbls= data.map(d=>(d.SNP||d.snp||"").replace("All - excluding ","excl. "));
+  const n   = data.length;
+  const h   = Math.max(260, n*24+90);
+  document.getElementById("loo-plot").style.height=h+"px";
+
+  // Full-sample IVW (last row is often "All")
+  const allRow = data.find(d=>(d.SNP||"").toLowerCase().startsWith("all"));
+  const fullB  = allRow ? +allRow.b||0 : null;
+
+  const shapes = fullB!==null ? [{
+    type:"line", x0:fullB, x1:fullB, y0:-0.5, y1:n-0.5,
+    line:{color:C.blue, width:1.5, dash:"dot"}
+  }] : [];
+  // CI lines
+  data.forEach((d,i)=>{
+    const b=+d.b||0, s=+d.se||0;
+    shapes.push({type:"line",x0:b-1.96*s,x1:b+1.96*s,y0:i,y1:i,
+      line:{color:C.blue,width:1.5}});
+    shapes.push({type:"line",x0:b-1.96*s,x1:b-1.96*s,y0:i-0.1,y1:i+0.1,
+      line:{color:C.blue,width:1.2}});
+    shapes.push({type:"line",x0:b+1.96*s,x1:b+1.96*s,y0:i-0.1,y1:i+0.1,
+      line:{color:C.blue,width:1.2}});
+  });
+
+  Plotly.newPlot("loo-plot",[{
+    type:"scatter",mode:"markers",x:bv,y:lbls,
+    marker:{size:7,color:C.blue,opacity:0.8,line:{color:"white",width:0.8}},
+    hovertemplate:data.map((_,i)=>
+      `<b>${lbls[i]}</b><br>β = ${f3(bv[i])}<br>95% CI [${f3(bv[i]-1.96*se[i])}, ${f3(bv[i]+1.96*se[i])}]<extra></extra>`),
+    showlegend:false
+  }], PLbase({
+    height:h, margin:{l:230,r:30,t:24,b:40},
+    xaxis:{title:{text:"IVW estimate (β)",standoff:10},
+           zeroline:true, zerolinecolor:C.zero, zerolinewidth:1,
+           showgrid:false, linecolor:"#d0d7de"},
+    yaxis:{zeroline:false, showgrid:false, automargin:true, tickfont:{size:9.5}},
+    shapes, showlegend:false
+  }), PLcfg);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INSTRUMENTS
+// ═══════════════════════════════════════════════════════════════
+function buildInstCards() {
+  const n    = WALD_DATA.length;
+  const fmean= n>0?(WALD_DATA.reduce((s,d)=>s+(+d.f_stat||0),0)/n).toFixed(1):"—";
+  const nstr = WALD_DATA.filter(d=>+d.f_stat>10).length;
+  document.getElementById("inst-cards").innerHTML=[
+    {l:"Total instruments", v:n,     s:"all analyses",   c:"blue"},
+    {l:"Mean F-statistic",  v:fmean, s:"post-clumping",  c:"green"},
+    {l:"F > 10 (strong)",   v:nstr,  s:"",               c:""},
+  ].map(x=>`<div class="card ${x.c}"><div class="card-label">${x.l}</div>
+    <div class="card-value">${x.v}</div><div class="card-sub">${x.s}</div></div>`).join("");
+}
+function buildInstTable(data) {
+  const tbody=document.getElementById("inst-tbody");
+  tbody.innerHTML="";
+  if(!data.length){ tbody.innerHTML='<tr><td colspan="8" class="empty">No instrument data</td></tr>'; return; }
+  data.slice(0,600).forEach(d=>{
+    const fv=+d.f_stat;
+    tbody.insertAdjacentHTML("beforeend",`<tr>
+      <td class="mono" style="font-size:11px">${d.SNP||"—"}</td>
+      <td>${d.exposure||"—"}</td>
+      <td>${d.outcome||"—"}</td>
+      <td><span class="dir-tag">${(d.direction||"").replace("->","→")}</span></td>
+      <td class="mono">${f3(d.beta_exp)}</td>
+      <td class="mono">${f3(d.beta_out)}</td>
+      <td class="mono">${f3(d.wald_ratio)}</td>
+      <td class="mono ${fv<10?"trend":""}">${isNaN(fv)?"—":fv.toFixed(1)}</td>
+    </tr>`);
+  });
+}
+document.getElementById("inst-search").addEventListener("input",e=>{
+  const q=e.target.value.toLowerCase();
+  buildInstTable(WALD_DATA.filter(d=>
+    (d.SNP||"").toLowerCase().includes(q)||
+    (d.exposure||"").toLowerCase().includes(q)||
+    (d.outcome||"").toLowerCase().includes(q)));
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  MVMR
+// ═══════════════════════════════════════════════════════════════
+function buildMvmrCards() {
+  const sig=MVMR_DATA.filter(d=>+d.pval<0.05).length;
+  document.getElementById("mvmr-cards").innerHTML=[
+    {l:"MVMR estimates",v:MVMR_DATA.length,s:"IVW + Egger",    c:"purple"},
+    {l:"p < 0.05",       v:sig,            s:"direct effects", c:"red"},
+  ].map(x=>`<div class="card ${x.c}"><div class="card-label">${x.l}</div>
+    <div class="card-value">${x.v}</div><div class="card-sub">${x.s}</div></div>`).join("");
+}
+function buildMvmrTable(data) {
+  const tbody=document.getElementById("mvmr-tbody");
+  tbody.innerHTML="";
+  if(!data.length){ tbody.innerHTML='<tr><td colspan="10" class="empty">No MVMR results</td></tr>'; return; }
+  data.forEach(d=>{
+    tbody.insertAdjacentHTML("beforeend",`<tr>
+      <td class="bold">${(d.label||"").replace(/,/g,"+")}</td>
+      <td>${d.outcome||"—"}</td>
+      <td><span class="dir-tag">${(d.direction||"").replace("->","→")}</span></td>
+      <td>${methPill(d.method)}</td>
+      <td>${d.exposure||"—"}</td>
+      <td class="mono">${f3(d.beta)}</td>
+      <td class="mono">${f3(d.se)}</td>
+      <td class="mono ${pCls(d.pval)}">${fP(d.pval)}</td>
+      <td class="mono">${d.n_snps||"—"}</td>
+      <td class="mono">${isNaN(+d.cond_f)?"—":(+d.cond_f).toFixed(1)}</td>
+    </tr>`);
+  });
+}
+document.getElementById("mvmr-search").addEventListener("input",e=>{
+  const q=e.target.value.toLowerCase();
+  buildMvmrTable(MVMR_DATA.filter(d=>
+    (d.label||"").toLowerCase().includes(q)||
+    (d.exposure||"").toLowerCase().includes(q)||
+    (d.outcome||"").toLowerCase().includes(q)));
+});
+function drawMvmrCharts() {
+  const ivw=MVMR_DATA.filter(d=>d.method&&d.method.toLowerCase().includes("ivw"));
+  if(!ivw.length) return;
+  const n   = ivw.length;
+  const bv  = ivw.map(d=>+d.beta||0);
+  const lo  = ivw.map(d=>(+d.beta||0)-1.96*(+d.se||0));
+  const hi  = ivw.map(d=>(+d.beta||0)+1.96*(+d.se||0));
+  const lbls= ivw.map(d=>`${d.exposure||""} [${(d.label||"").replace(/,/g,"+")} → ${d.outcome||""}]`);
+  const outs= [...new Set(ivw.map(d=>d.outcome))];
+  const outCol=Object.fromEntries(outs.map((o,i)=>[o,OUT_COLS[i%OUT_COLS.length]]));
+  const cols= ivw.map(d=>outCol[d.outcome]||C.purple);
+  const h   = Math.max(280, n*32+90);
+
+  const shapes=[{type:"line",x0:0,x1:0,y0:-0.5,y1:n-0.5,
+    line:{color:C.zero,width:1.2,dash:"dash"}}];
+  ivw.forEach((d,i)=>{
+    const col=cols[i];
+    shapes.push({type:"line",x0:lo[i],x1:hi[i],y0:i,y1:i,line:{color:col,width:2}});
+    shapes.push({type:"line",x0:lo[i],x1:lo[i],y0:i-0.13,y1:i+0.13,line:{color:col,width:1.5}});
+    shapes.push({type:"line",x0:hi[i],x1:hi[i],y0:i-0.13,y1:i+0.13,line:{color:col,width:1.5}});
+  });
+  const allX=[...lo,...hi,0];
+  const xmin=Math.min(...allX), xmax=Math.max(...allX);
+  const pad=(xmax-xmin)*0.12||0.3;
+  const annots=ivw.map((d,i)=>({
+    x:xmax+pad*0.55, y:i, text:`${fP(d.pval)} ${isNaN(+d.cond_f)?"":"|F="+((+d.cond_f).toFixed(1))}`,
+    xanchor:"left", showarrow:false,
+    font:{size:9, color:+d.pval<0.05?C.red:C.grey, family:"Source Code Pro,monospace"}
+  }));
+
+  document.getElementById("mvmr-forest").style.height=h+"px";
+  Plotly.newPlot("mvmr-forest", outs.map(o=>({
+    type:"scatter",mode:"markers",name:o,legendgroup:o,
+    x:ivw.filter(d=>d.outcome===o).map(d=>+d.beta||0),
+    y:ivw.filter(d=>d.outcome===o).map((_,j)=>lbls[ivw.filter(d2=>d2.outcome===o).indexOf(ivw.filter(d2=>d2.outcome===o)[j])]),
+    marker:{symbol:"diamond",size:11,color:outCol[o],line:{color:outCol[o],width:2},
+            opacity:ivw.filter(d=>d.outcome===o).map(d=>+d.pval<0.05?1:0.45)},
+    hovertemplate:ivw.filter(d=>d.outcome===o).map(d=>
+      `<b>${d.exposure}</b> → ${d.outcome}<br>β = ${f3(d.beta)}<br>p = ${fP(d.pval)}<br>condF = ${isNaN(+d.cond_f)?"—":(+d.cond_f).toFixed(1)}<extra></extra>`),
+    showlegend:true
+  })), PLbase({
+    height:h, margin:{l:320,r:130,t:24,b:40},
+    xaxis:{title:{text:"β (direct, MVMR-IVW)",standoff:10},
+           range:[xmin-pad,xmax+pad],
+           zeroline:false, showgrid:false, linecolor:"#d0d7de"},
+    yaxis:{zeroline:false, showgrid:false, automargin:true, tickfont:{size:10}},
+    shapes, annotations:annots,
+    legend:{x:1.01, xanchor:"left", y:0.5}
+  }), PLcfg);
+
+  // Conditional F-stat bar
+  const cf=ivw.filter(d=>!isNaN(+d.cond_f)&&+d.cond_f>0);
+  if(cf.length) {
+    Plotly.newPlot("mvmr-fstat",[{
+      type:"bar", orientation:"h",
+      x:cf.map(d=>+d.cond_f),
+      y:cf.map(d=>`${d.exposure||""} [${d.label||""}]`),
+      marker:{color:cf.map(d=>+d.cond_f>=10?C.green:C.red),
+              line:{color:"white",width:0.5}},
+      hovertemplate:"<b>%{y}</b><br>condF = %{x:.1f}<extra></extra>"
+    }], PLbase({
+      height:320, margin:{l:230,r:30,t:24,b:40},
+      xaxis:{title:{text:"Conditional F-statistic",standoff:8},
+             zeroline:false, showgrid:false, linecolor:"#d0d7de"},
+      yaxis:{zeroline:false, showgrid:false, automargin:true},
+      shapes:[{type:"line",x0:10,x1:10,y0:-0.5,y1:cf.length-0.5,
+               line:{color:C.red,width:1.5,dash:"dash"}}],
+      annotations:[{x:10,y:cf.length-0.2,text:"F = 10",xanchor:"left",showarrow:false,
+                    font:{size:9,color:C.red,family:"Source Code Pro,monospace"}}],
+      showlegend:false
+    }), PLcfg);
+  }
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+// ── INIT — eagerly render all charts so no tab is empty ─────────
+document.addEventListener("DOMContentLoaded", function() {
+  buildOverview();
+  buildUvmrCards();
+  buildUvmrTable(MR_DATA);
+  // Pre-render all other tabs so figures are ready when user clicks
+  buildHetTable(HET_DATA); drawHetCharts();
+  buildInstCards(); buildInstTable(WALD_DATA);
+  buildMvmrCards(); buildMvmrTable(MVMR_DATA); drawMvmrCharts();
+  initScatterFilt();
+  initLooFilt();
+  drawForest("all");
+});
+</script>
+</body>
+</html>

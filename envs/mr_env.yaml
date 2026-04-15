@@ -1,0 +1,18 @@
+name: cdc_mr
+channels:
+  - conda-forge
+  - bioconda
+  - r
+  - defaults
+dependencies:
+  - python=3.11
+  - pandas>=2.0
+  - numpy>=1.24
+  - matplotlib>=3.7
+  - r-base>=4.3
+  - r-twosamplemr
+  - r-mendelianrandomization
+  - r-mvmr
+  - r-data.table
+  - r-ieugwasr
+  - pigz
