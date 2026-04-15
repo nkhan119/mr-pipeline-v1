@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """
 render_mr_report.py — MR Pipeline CDC 1.0.0  Stage B6
-Reads all TSV results staged into the work directory, injects JSON
-into the HTML template, and writes MR_Report.html.
 """
 
 import argparse
