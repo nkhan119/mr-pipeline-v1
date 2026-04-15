@@ -10,10 +10,6 @@
 //    6. Leave-one-out        — IVW stability when each IV dropped
 //    7. Single-SNP MR        — per-instrument Wald ratios
 //
-//  Change (2026-04-13):
-//    val ref_panel removed from input block; resolved via params.ref_panel
-//    inside the script. clump() rewritten to call PLINK directly via
-//    system2() and handle both .clumps (PLINK2) and .clumped (PLINK 1.9).
 // ================================================================
 process HETEROGENEITY {
     label 'medium'
