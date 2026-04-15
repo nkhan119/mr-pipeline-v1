@@ -1,5 +1,5 @@
 // ================================================================
-//  modules/mvmr.nf — Multivariable MR (Fixed based on working R script v1.4.0)
+//  modules/mvmr.nf — Multivariable MR
 // ================================================================
 
 process MVMR {
