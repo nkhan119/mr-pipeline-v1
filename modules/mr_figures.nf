@@ -1,7 +1,5 @@
 // ================================================================
 //  modules/mr_figures.nf — Stage B5
-//  Publication-quality MR figures (300 DPI PNG + PDF)
-//  No grid lines · generous whitespace · Nature-style axes
 // ================================================================
 process MR_FIGURES {
     label 'medium'
