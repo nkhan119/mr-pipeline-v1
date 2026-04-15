@@ -29,7 +29,7 @@ Mendelian Randomization analysis across two cohorts in both directions.
 remotes::install_github("MRCIEU/TwoSampleMR")
 remotes::install_github("mrcieu/ieugwasr")
 remotes::install_github("WSpiller/MVMR")
-remotes::install_github("rondolab/MR-PRESSO")   # optional — silently skipped if absent
+remotes::install_github("rondolab/MR-PRESSO")
 ```
 
 ### Docker (recommended)
@@ -38,7 +38,7 @@ A `Dockerfile` is included that installs all R packages, `plink2`, and `plink 1.
 
 ```bash
 docker build -t nkhan119/mr-pipeline:1.0.0 .
-docker push nkhan119/mr-pipeline:1.0.0          # optional
+docker push nkhan119/mr-pipeline:1.0.0  
 ```
 
 ---
@@ -145,8 +145,8 @@ results/
     F5_single_snp.{png,pdf}
     F6_mvmr_forest.{png,pdf}
   uvmr/
-    *_mr.tsv          ← IVW / Egger / Weighted Median estimates
-    *_wald.tsv        ← per-instrument Wald ratios
+    *_mr.tsv
+    *_wald.tsv
   heterogeneity/
     *_het.tsv
     *_loo.tsv
