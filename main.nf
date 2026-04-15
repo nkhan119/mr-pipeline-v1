@@ -14,12 +14,6 @@ nextflow.enable.dsl=2
 //    B5  MR_FIGURES       — publication-quality figures (300 DPI PNG + PDF)
 //    B6  MR_REPORT        — interactive Plotly HTML report
 //
-//  Change (2026-04-13):
-//    params.ref_panel is no longer passed as a `val` channel argument
-//    to UNIVARIABLE_MR / HETEROGENEITY / MVMR. Each module resolves it
-//    directly from params inside the script block. This avoids Nextflow
-//    treating the path string as a file object and staging it into the
-//    work directory (which broke PLINK bfile resolution on compute nodes).
 // ================================================================
 
 include { BUILD_RSID_MAP   } from './modules/build_rsid_map'
