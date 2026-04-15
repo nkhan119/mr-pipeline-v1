@@ -1,18 +1,7 @@
 #!/usr/bin/env python3
 """
 mr_figures.py — MR Pipeline CDC 1.0.0  Stage B5
-Publication-quality MR figures at 300 DPI (PNG + PDF)
 
-Figures produced:
-  F1  Forest plot         — uvMR estimates (IVW + Egger + WMedian)
-  F2  Heterogeneity panel — Cochran Q · I² · Egger intercept · Steiger
-  F3  Scatter + funnel    — SNP-exposure vs SNP-outcome per pair
-  F4  Leave-one-out       — IVW stability per analysis
-  F5  Single-SNP forest   — per-instrument Wald ratios
-  F6  MVMR forest         — direct causal effects
-
-Style: Nature-style axes, no grid lines, generous whitespace,
-       10 pt Helvetica text, 300 DPI.
 """
 
 import argparse
